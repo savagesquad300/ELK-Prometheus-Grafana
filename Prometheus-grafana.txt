@@ -1,0 +1,66 @@
+First you have to install Helm in your server using the command below;
+--
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+---
+This installation script might expire anytime, thus you can always use the Helm Website below;
+https://helm.sh/docs/intro/install/
+After the Installation you will have to add helm repos to your local environment
+To add Prometheus Helm repo, run the command below
+--
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+--
+To add Grafana Helm repo, run the command below
+--
+helm repo add grafana https://grafana.github.io/helm-charts
+
+Use $helm repo list  ; To list all repositories you have on your local helm
+
+To show all the available charts in your helm repos, use
+helm search repo prometheus
+helm search repo grafana
+---
+Use $helm repo update  ; to keep your repositories updated.
+To view and edit the values file use the following command
+ helm show values prometheus-community/prometheus
+To see the Templates use 
+helm template prometheus-community/prometheus
+All This is applicable for Grafana and ELK stack too.
+To install Prometheus using Helm run the command below
+---
+ helm install prometheus prometheus-community/prometheus
+ To expose Prometheus-server service use the command below;
+ ---
+  kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext -n apm
+  Note that you can also use ingress if you have DNS already configured
+
+  You can do this for the prometheus-server, alert manager and grafana. 
+  YOu can access via DNS, or using the Node Ip address and the node port number that was created when the node was exported.
+
+  When you get to Grafana, You have to add prometheus as a data source.
+  if you are using node port Ip:port to access you Prometheus, you can use this as the data source.
+  But if you used ingress, you have to use service discovery. 
+  Thus, you have to put in the correct prometheus service name under the name field
+  for the url use http://prometheus-server
+  In grafana you have to create a dashboard to monitor whats going on in your kubernetes cluster
+  You can research on what dashboard to use or use 3119, 7249
+  You can also Expose the kube-state-metric, here you can find details (queries) you can copy and paste in prometheus server to get more details
+  of what is going on with the  metrics.
+  This is what grafana does but with a visual aid.
+
+  To add a target in Prometheus, You can access the prometheus-server config map with the command below
+  --
+  kubectl get cm -n apm
+  To edit the config map run the command below
+   kubectl edit cm prometheus-server -n apm
+   here you can edit the file and add a new job under the scrap_configs: as follows
+   scrap_configs:
+   - job_name: prometheus
+     static_configs:
+     - targets: 
+       - localhost:9090
+To configure alert manager, edit the alert manager config map
+kubectl edit cm prometheus-alertmanager -n apm
