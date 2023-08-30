@@ -36,7 +36,9 @@ To install Prometheus using Helm run the command below
  ---
   kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext -n apm
   Note that you can also use ingress if you have DNS already configured
-
+You can directly change the service from a cluster ip to Node port using the below command. Do this only if you have a public IP assigned to your node 
+kubectl patch svc prometheus-server -n apm -p '{"spec": {"type": "NodePort"}}'
+remember to edit the namespace and other commands as required
   You can do this for the prometheus-server, alert manager and grafana. 
   YOu can access via DNS, or using the Node Ip address and the node port number that was created when the node was exported.
 
